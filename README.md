@@ -12,13 +12,26 @@ templates/          login, signup, detect pages
 static/uploads/     annotated results are written here at runtime
 Dockerfile          CPU-only image
 requirements.txt    dependencies
-best.pt             <-- YOU ADD THIS: your trained model
+best.pt             the trained model (already included, see below)
 ```
 
-## Step 0 — Add your model
+## About the model
 
-Copy your trained `best.pt` into this folder, next to `app.py`.
-Without it the app won't start.
+`best.pt` is a YOLOv8n model fine-tuned on a 19-brand car dataset
+(Alpha Romeo, Audi, Bentley, BMW, Ferrari, Ford, Lamborghini, Porsche,
+Tesla, Toyota, and more — see `TRAINING_RESULTS.md` for the full list
+and metrics). It's already committed to this repo, so the app runs
+as-is with no extra setup.
+
+Want to swap in a different model instead? A few real pretrained
+options if you don't want to train your own:
+
+- [Brand Logo recognition — YOLOv8](https://universe.roboflow.com/myawesomeworkspace/brand-logo-recognition-yolov8-uichv) (Roboflow Universe) — detects brand logos rather than whole-car brand classification, closer to a logo-spotting use case.
+- [Vehicle Detect — YOLOv8](https://universe.roboflow.com/yolov8-m2va2/vehicle-detect-qxprz) (Roboflow Universe) — general vehicle detection, good as a base to fine-tune on your own brand-labeled data.
+- [Roboflow Universe YOLOv8 model search](https://universe.roboflow.com/search?q=model%3Ayolov8) — browse other pretrained YOLOv8 models and datasets, including logo/brand-specific ones, that can be exported and dropped in as `best.pt`.
+
+Any YOLOv8 `.pt` file works as a drop-in replacement, as long as
+`model.names` in `app.py` matches the classes it was trained on.
 
 ## Run locally (no Docker)
 
