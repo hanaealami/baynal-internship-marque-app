@@ -1,0 +1,7 @@
+Flask==3.0.3
+gunicorn==22.0.0
+ultralytics==8.4.127
+torch==2.4.1
+torchvision==0.19.1
+Werkzeug==3.0.3
+transformers==4.44.2

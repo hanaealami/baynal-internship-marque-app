@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Create account · Marque{% endblock %}
+{% block content %}
+<style>
+  .auth { max-width: 380px; margin: 40px auto; }
+  .auth h1 { font-size: 30px; font-weight: 700; margin-bottom: 6px; }
+  .auth p.sub { color: var(--muted); font-family: var(--mono); font-size: 13px; margin-bottom: 30px; }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%; padding: 12px 14px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; color: var(--ink);
+    font-family: var(--mono); font-size: 14px;
+  }
+  .field input:focus { outline: none; border-color: var(--amber); }
+  .btn {
+    width: 100%; padding: 13px; background: var(--amber); color: #1a1205;
+    border: none; border-radius: 6px; font-family: var(--sans);
+    font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 6px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .alt { text-align: center; margin-top: 22px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+</style>
+<div class="auth">
+  <h1>Create account</h1>
+  <p class="sub">Takes a second. No email needed.</p>
+  <form method="post">
+    <div class="field">
+      <label>Username</label>
+      <input name="username" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" autocomplete="new-password" required>
+    </div>
+    <button class="btn" type="submit">Create account</button>
+  </form>
+  <p class="alt">Already have one? <a href="{{ url_for('login') }}">Sign in</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Detect · Marque{% endblock %}
+{% block content %}
+<style>
+  .lead h1 { font-size: 34px; font-weight: 700; margin-bottom: 8px; }
+  .lead p { color: var(--muted); font-family: var(--mono); font-size: 13px; margin-bottom: 34px; }
+
+  .drop {
+    display: block;
+    border: 1px dashed var(--line); border-radius: 10px; background: var(--panel);
+    padding: 46px 24px; text-align: center; transition: border-color .15s;
+  }
+  .drop.drag { border-color: var(--amber); }
+  .drop svg { margin-bottom: 14px; }
+  .drop .hint { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .drop .fname { font-family: var(--mono); font-size: 13px; color: var(--amber); margin-top: 12px; min-height: 18px; }
+  input[type=file] { display: none; }
+  .pick {
+    display: inline-block; margin-top: 6px; padding: 11px 20px; cursor: pointer;
+    background: transparent; border: 1px solid var(--amber); color: var(--amber);
+    border-radius: 6px; font-family: var(--sans); font-weight: 500; font-size: 14px;
+  }
+  .pick:hover { background: rgba(255,176,32,0.08); }
+  .go {
+    margin-top: 20px; width: 100%; padding: 14px; background: var(--amber); color: #1a1205;
+    border: none; border-radius: 6px; font-family: var(--sans); font-weight: 700;
+    font-size: 15px; cursor: pointer;
+  }
+  .go:hover { filter: brightness(1.08); }
+
+  .result { margin-top: 40px; display: grid; grid-template-columns: 1fr; gap: 26px; }
+  @media (min-width: 720px) { .result { grid-template-columns: 1.4fr 1fr; } }
+  .result img { width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+  .readout h2 {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 16px; font-weight: 500;
+  }
+  .row { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .row-top {
+    display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;
+  }
+  .row .marque { font-size: 20px; font-weight: 700; text-transform: capitalize; }
+  .row .conf { font-family: var(--mono); font-size: 14px; }
+  .conf.tier-high { color: var(--good); }
+  .conf.tier-mid { color: var(--amber); }
+  .conf.tier-low { color: var(--bad); }
+  .bar {
+    height: 6px; border-radius: 3px; background: var(--line); overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+  .bar-fill.tier-high { background: var(--good); }
+  .bar-fill.tier-mid { background: var(--amber); }
+  .bar-fill.tier-low { background: var(--bad); }
+  .empty { font-family: var(--mono); font-size: 14px; color: var(--muted); padding: 14px 0; }
+</style>
+
+<div class="lead">
+  <h1>Identify a car</h1>
+  <p>Upload a photo. The model returns the marque, its confidence, and any visible damage.</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="form">
+  <label class="drop" id="drop" for="file">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#8a94a3" stroke-width="1.5">
+      <path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+    </svg>
+    <div class="hint">Drag an image here</div>
+    <span class="pick">Choose file</span>
+    <div class="fname" id="fname"></div>
+    <input type="file" name="image" id="file" accept="image/*" required>
+  </label>
+  <button class="go" type="submit">Detect marque &amp; damage</button>
+</form>
+
+{% if result_image %}
+<div class="result">
+  <img src="{{ result_image }}" alt="Detection result">
+  <div class="readout">
+    <h2>READOUT</h2>
+    {% if detections %}
+      {% for d in detections %}
+      {% set tier = 'tier-high' if d.conf >= 80 else ('tier-mid' if d.conf >= 50 else 'tier-low') %}
+      <div class="row">
+        <div class="row-top">
+          <span class="marque">{{ d.brand }}</span>
+          <span class="conf {{ tier }}">{{ d.conf }}%</span>
+        </div>
+        <div class="bar"><div class="bar-fill {{ tier }}" style="width: {{ d.conf }}%"></div></div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No car detected. Try a clearer photo.</div>
+    {% endif %}
+
+    {% if damage %}
+      <h2 style="margin-top: 26px;">DAMAGE</h2>
+      {% if damage.label %}
+      {% set dtier = 'tier-high' if damage.conf >= 80 else ('tier-mid' if damage.conf >= 50 else 'tier-low') %}
+      <div class="row">
+        <div class="row-top">
+          <span class="marque">{{ damage.label }}</span>
+          <span class="conf {{ dtier }}">{{ damage.conf }}%</span>
+        </div>
+        <div class="bar"><div class="bar-fill {{ dtier }}" style="width: {{ damage.conf }}%"></div></div>
+      </div>
+      {% else %}
+      <div class="empty">No visible damage detected.</div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+  const file = document.getElementById('file');
+  const fname = document.getElementById('fname');
+  const drop = document.getElementById('drop');
+  file.addEventListener('change', () => {
+    fname.textContent = file.files.length ? file.files[0].name : '';
+  });
+  ['dragover','dragenter'].forEach(e =>
+    drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(e =>
+    drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', ev => {
+    if (ev.dataTransfer.files.length) { file.files = ev.dataTransfer.files;
+      fname.textContent = ev.dataTransfer.files[0].name; }
+  });
+</script>
+{% endblock %}
