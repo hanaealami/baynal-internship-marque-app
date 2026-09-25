@@ -4,6 +4,29 @@ Flask web app with signup/login. A logged-in user uploads a car photo; a
 YOLOv8 model detects the car's marque (brand) and shows the annotated image
 with confidence scores.
 
+## Status
+
+**Working**
+- Signup / login / logout (SQLite, hashed passwords, session-protected routes)
+- Brand detection with a self-trained YOLOv8n model (19 brands; precision 0.918, recall 0.823, mAP50 0.915, mAP50-95 0.901 on the validation split)
+- Damage classification using a pretrained Hugging Face model (`beingamit99/car_damage_detection`), loaded per request to keep idle memory low
+- Docker image and a working deployment on an AWS EC2 instance
+
+**Limits, stated plainly**
+- The training data is a small Roboflow dataset (1,708 train / 190 validation images, about 10 validation instances per class), so per-class metrics are noisy. BMW and Tesla are the weakest classes.
+- The damage model is pretrained, not trained here. It has no "no damage" class, so results under 55% confidence are reported as no visible damage.
+- This version loads two models and is heavier than a 1 GB instance can comfortably run. The lean deployed variant used a single model.
+- There is no automated test suite yet.
+
+**Companion projects (separate repos)**
+- A Flutter mobile prototype. It currently runs on sample data and is not connected to this backend.
+
+## Possible improvements
+- More training images for the weakest classes, plus a held-out test split
+- A JSON API (token auth) so the mobile app can call the real models
+- Automated tests for the auth flow and upload validation
+- Email notifications for registered users through the mail setup
+
 ## What's in here
 
 ```
